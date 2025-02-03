@@ -1,0 +1,442 @@
+
+      {{ 'section-multicolumn.css' | asset_url | stylesheet_tag }}
+{{ 'component-slider.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+
+  .testimonial-container {
+   padding: 1.5rem;
+  }
+
+  .testimonial-card{
+    background-color: {{ section.settings.testomonial_color }} !important;
+    border-radius: 5%;
+    /* border: solid; */
+    zoom: 70%;
+    box-shadow: 5px 6px 3px 0px rgb(0 0 0 / 62%);
+  }
+  .testimonial-div{
+     background-color : {{ section.settings.div_color }};
+  }
+
+  .testimonial-div{
+     color : {{ section.settings.ring_color }};
+  }
+
+  .testimonial-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: solid;
+  }
+
+
+  .testimonial-header {
+    font-weight: bold;
+    color: {{ section.settings.header_color }};
+  }
+
+  .testimonial-subheader {
+
+    color: #666666;
+
+  }
+
+  .testimonial-rating {
+
+    color: {{ section.settings.star_color }};
+
+  }
+
+  .testimonial-description {
+
+    color: {{ section.settings.comment_color }};
+    line-height: 1.5;
+  }
+{%- endstyle -%}
+
+{%- liquid
+  assign columns_mobile_int = section.settings.columns_mobile | plus: 0
+  assign show_mobile_slider = false
+  if section.settings.swipe_on_mobile and section.blocks.size > columns_mobile_int
+    assign show_mobile_slider = true
+  endif
+-%}
+
+<div class="multicolumn  testimonial-div ">
+  <div
+    class="page-width section-{{ section.id }}-padding isolate{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+    {% if settings.animations_reveal_on_scroll %}
+      data-cascade
+    {% endif %}
+  >
+    {%- unless section.settings.title == blank -%}
+      <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin multicolumn__title">
+        <h2 class="title {{ section.settings.header_alignment }} inline-richtext {{ section.settings.heading_size }}">
+          {{ section.settings.title }}
+        </h2>
+        {%- if section.settings.button_label != blank and show_mobile_slider -%}
+          <a href="{{ section.settings.button_link }}" class="link underlined-link large-up-hide">
+            {{- section.settings.button_label | escape -}}
+          </a>
+        {%- endif -%}
+      </div>
+    {%- endunless -%}
+    <slider-component class="slider-mobile-gutter">
+      <ul
+        class="multicolumn-list contains-content-container grid grid--{{ section.settings.columns_mobile }}-col-tablet-down grid--{{ section.settings.columns_desktop }}-col-desktop{% if show_mobile_slider %} slider slider--tablet grid--peek{% endif %}"
+        id="Slider-{{ section.id }}"
+        role="list"
+      >
+        {%- liquid
+          assign highest_ratio = 0
+          for block in section.blocks
+            if block.settings.image.aspect_ratio > highest_ratio
+              assign highest_ratio = block.settings.image.aspect_ratio
+            endif
+          endfor
+        -%}
+        {%- for block in section.blocks -%}
+          {%- assign empty_column = '' -%}
+          {%- if block.settings.image == blank
+            and block.settings.title == blank
+            and block.settings.text == blank
+            and block.settings.link_label == blank
+          -%}
+            {%- assign empty_column = ' multicolumn-list__item--empty' -%}
+          {%- endif -%}
+
+          <li
+            id="Slide-{{ section.id }}-{{ forloop.index }}"
+            class="multicolumn-list__item grid__item{% if section.settings.swipe_on_mobile %} slider__slide{% endif %}{% if section.settings.column_alignment == 'center' %} center{% endif %}{{ empty_column }}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+            {{ block.shopify_attributes }}
+            {% if settings.animations_reveal_on_scroll %}
+              data-cascade
+              style="--animation-order: {{ forloop.index }};"
+            {% endif %}
+          >
+            <div class="multicolumn-card testimonial-card content-container">
+              <div class="testimonial-container">
+                {% if block.settings.image != blank %}
+                  <img
+                    src="{{ block.settings.image | img_url: '200x200' }}"
+                    alt="{{ block.settings.header }}"
+                    class="testimonial-image"
+                  >
+                {% endif %}
+
+                <div class="testimonial-header">{{ block.settings.header }}</div>
+                <div class="testimonial-subheader">- {{ block.settings.subheader }}</div>
+                <div class="testimonial-rating">
+                  {% for i in (1..block.settings.rating) %}
+                    ★
+                  {% endfor %}
+                </div>
+                <div class="testimonial-description">{{ block.settings.description }}</div>
+              </div>
+            </div>
+          </li>
+        {%- endfor -%}
+      </ul>
+
+      {%- if show_mobile_slider -%}
+        <div class="slider-buttons large-up-hide">
+          <button
+            type="button"
+            class="slider-button slider-button--prev"
+            name="previous"
+            aria-label="{{ 'general.slider.previous_slide' | t }}"
+          >
+            <span class="svg-wrapper">{{ 'icon-caret.svg' | inline_asset_content }}</span>
+          </button>
+          <div class="slider-counter caption">
+            <span class="slider-counter--current">1</span>
+            <span aria-hidden="true"> / </span>
+            <span class="visually-hidden">{{ 'general.slider.of' | t }}</span>
+            <span class="slider-counter--total">{{ section.blocks.size }}</span>
+          </div>
+          <button
+            type="button"
+            class="slider-button slider-button--next"
+            name="next"
+            aria-label="{{ 'general.slider.next_slide' | t }}"
+          >
+            <span class="svg-wrapper">{{ 'icon-caret.svg' | inline_asset_content }}</span>
+          </button>
+        </div>
+      {%- endif -%}
+    </slider-component>
+    <div class="center{% if show_mobile_slider %} small-hide medium-hide{% endif %}">
+      {%- if section.settings.button_label != blank -%}
+        <a
+          class="button button--primary"
+          {% if section.settings.button_link == blank %}
+            role="link" aria-disabled="true"
+          {% else %}
+            href="{{ section.settings.button_link }}"
+          {% endif %}
+        >
+          {{ section.settings.button_label | escape }}
+        </a>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+{%- schema -%}
+{
+  "name": "testimonials",
+  "settings": [
+    {
+    "type": "inline_richtext",
+    "id": "title",
+    "default": "t:sections.multicolumn.settings.title.default",
+    "label": "t:sections.multicolumn.settings.title.label"
+  },
+  {
+    "type": "select",
+    "id": "heading_size",
+    "options": [
+      {
+        "value": "h2",
+        "label": "t:sections.all.heading_size.options__1.label"
+      },
+      {
+        "value": "h1",
+        "label": "t:sections.all.heading_size.options__2.label"
+      },
+      {
+        "value": "h0",
+        "label": "t:sections.all.heading_size.options__3.label"
+      },
+      {
+        "value": "hxl",
+        "label": "t:sections.all.heading_size.options__4.label"
+      },
+      {
+        "value": "hxxl",
+        "label": "t:sections.all.heading_size.options__5.label"
+      }
+    ],
+    "default": "h1",
+    "label": "t:sections.all.heading_size.label"
+  },
+    {
+    "type": "select",
+    "id": "header_alignment",
+    "options": [
+      {
+        "value": "heading-allignment-left",
+        "label": "t:sections.multicolumn.settings.column_alignment.options__1.label"
+      },
+      {
+        "value": "heading-allignment-center",
+        "label": "t:sections.multicolumn.settings.column_alignment.options__2.label"
+      }
+    ],
+    "default": "heading-allignment-left",
+    "label": "Header Alignment"
+  },
+    {
+    "type": "range",
+    "id": "columns_desktop",
+    "min": 1,
+    "max": 6,
+    "step": 1,
+    "default": 3,
+    "label": "t:sections.multicolumn.settings.columns_desktop.label"
+  },
+  {
+    "type": "select",
+    "id": "column_alignment",
+    "options": [
+      {
+        "value": "left",
+        "label": "t:sections.multicolumn.settings.column_alignment.options__1.label"
+      },
+      {
+        "value": "center",
+        "label": "t:sections.multicolumn.settings.column_alignment.options__2.label"
+      }
+    ],
+    "default": "left",
+    "label": "t:sections.multicolumn.settings.column_alignment.label"
+  },
+  {
+    "type": "select",
+    "id": "background_style",
+    "options": [
+      {
+        "value": "none",
+        "label": "t:sections.multicolumn.settings.background_style.options__1.label"
+      },
+      {
+        "value": "primary",
+        "label": "t:sections.multicolumn.settings.background_style.options__2.label"
+      }
+    ],
+    "default": "primary",
+    "label": "t:sections.multicolumn.settings.background_style.label"
+  },
+     {
+    "type": "header",
+    "content": "t:sections.multicolumn.settings.header_mobile.content"
+  },
+  {
+    "type": "select",
+    "id": "columns_mobile",
+    "options": [
+      {
+        "value": "1",
+        "label": "t:sections.multicolumn.settings.columns_mobile.options__1.label"
+      },
+      {
+        "value": "2",
+        "label": "t:sections.multicolumn.settings.columns_mobile.options__2.label"
+      }
+    ],
+    "default": "1",
+    "label": "t:sections.multicolumn.settings.columns_mobile.label"
+  },
+  {
+    "type": "checkbox",
+    "id": "swipe_on_mobile",
+    "default": false,
+    "label": "t:sections.multicolumn.settings.swipe_on_mobile.label"
+  },
+    {
+      "type": "color",
+      "id": "star_color",
+      "label": "Star Color",
+      "default": "#FFC107"
+    },
+    {
+      "type": "color",
+      "id": "comment_color",
+      "label": "Comment Color",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "header_color",
+      "label": "Header Color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "div_color",
+      "label": "Div Color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "ring_color",
+      "label": "Ring Color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "testomonial_color",
+      "label": "Testomonial card Color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 36
+    }
+  ],
+  "blocks": [
+    {
+      "type": "testimonial",
+      "name": "Testimonial",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "header",
+          "label": "Header",
+          "default": "Lara T."
+        },
+        {
+          "type": "text",
+          "id": "subheader",
+          "label": "Subheader",
+          "default": "- Mommy Life Saver"
+        },
+        {
+          "type": "range",
+          "id": "rating",
+          "label": "Rating",
+          "min": 1,
+          "max": 5,
+          "step": 1,
+          "default": 5
+        },
+        {
+          "type": "richtext",
+          "id": "description",
+          "label": "Description",
+          "default": "<p>\"Postpartum life came with migraines. NUVEDA is my little miracle for quick relief so I can return to baby snuggles faster. Also... did I say that it smells DEVINE!?\"</p>"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "testimonials",
+      "category": "Custom Content",
+      "blocks": [
+        {
+          "type": "testimonial"
+        },
+         {
+          "type": "testimonial"
+        },
+        {
+          "type": "testimonial"
+        },
+        {
+          "type": "testimonial"
+        }
+      ]
+    }
+  ]
+}
+{%- endschema -%}
+    
